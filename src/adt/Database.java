@@ -2,6 +2,8 @@ package adt;
 
 import java.io.Serializable;
 
+//Comments! Testing Comment!
+
 /** 
  * This class is a hash map alias providing
  * a Table Name -> Table Object mapping.
