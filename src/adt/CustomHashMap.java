@@ -1,5 +1,7 @@
 package adt;
 
+//Nice file you got here
+
 import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Iterator;
