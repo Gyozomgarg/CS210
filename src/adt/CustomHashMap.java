@@ -5,6 +5,7 @@ import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 public class CustomHashMap<K,V> implements Map<K,V> {
@@ -250,19 +251,30 @@ public class CustomHashMap<K,V> implements Map<K,V> {
     }
 
     private abstract class ViewIterator<T> implements Iterator<T> {
-        int index = 0;
+        int index = findFirst();
         Tuple<K,V> pointer = map[index];
-        Tuple<K,V> prevPoint = map[map.length-1];
-
+        Tuple<K,V> prevPoint = pointer;
+        
+        
         @Override
         public boolean hasNext() {
-            int tempHash = hashFunction(pointer.getKey())+1;
-            if(pointer.hasNext() == false && tempHash >= map.length)
+            if(index == -1 && findFirst() == -1){
+                return false;
+            }
+            if(pointer == null)
+                return false;
+            int tempHash = hashFunction(pointer.getKey());
+            if(pointer.hasNext() == false && tempHash >= map.length-1)
                 return false;
             return true;
         }
 
         protected Map.Entry<K,V> nextEntry() {
+            if(index == -1){
+                index = findFirst();
+                pointer = map[index];
+                return pointer;
+            }
             if(pointer.hasNext()){
                 if(prevPoint == null){
                     K tempKey = pointer.getKey();
@@ -281,17 +293,23 @@ public class CustomHashMap<K,V> implements Map<K,V> {
                     index = 0;
                 else
                     index ++;
-                prevPoint = prevPoint.getNext();
+//                prevPoint = prevPoint.getNext();
                 while(true){
-                    pointer = map[index];
-                    if(pointer == null)
-                        index++;
-                    else{
-                        prevPoint.setNextTuple(pointer);
-                        return pointer;
+                    try{    
+                        if(index >= map.length)
+                            throw new NoSuchElementException();
+                        pointer = map[index];
+                        if(pointer == null)
+                            index++;
+                        else{
+    //                        prevPoint.setNextTuple(pointer);
+                            return pointer;
+                        }
                     }    
+                    catch(NoSuchElementException e){
+                        return map[findFirst()];
+                    }
                 }
-                
             }
         }
 
@@ -299,6 +317,17 @@ public class CustomHashMap<K,V> implements Map<K,V> {
         public void remove() {
             prevPoint.setNextTuple(pointer.getNext());
             pointer = pointer.getNext();
+        }
+
+        private int findFirst() {
+            int firstIndex = -1;
+            for(int i=0; i<map.length; i++){
+                if(map[i] != null){
+                    firstIndex = i;
+                    break;
+                }
+            }
+            return firstIndex;
         }
     }
  
@@ -376,7 +405,7 @@ public class CustomHashMap<K,V> implements Map<K,V> {
 
                 @Override
                 public int size() {
-                    return map.length;
+                    return CustomHashMap.this.size();
                 }
 
                 @Override
@@ -390,7 +419,7 @@ public class CustomHashMap<K,V> implements Map<K,V> {
     public class Tuple<K,V> implements Map.Entry<K,V>{
         K key;
         V value;
-        Tuple<K,V> next;
+        public Tuple<K,V> next;
         
         public Tuple(){
             key = null;
