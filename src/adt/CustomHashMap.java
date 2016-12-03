@@ -251,24 +251,54 @@ public class CustomHashMap<K,V> implements Map<K,V> {
 
     private abstract class ViewIterator<T> implements Iterator<T> {
         int index = 0;
+        Tuple<K,V> pointer = map[index];
+        Tuple<K,V> prevPoint = map[map.length-1];
 
         @Override
         public boolean hasNext() {
-            return index < size();
+            int tempHash = hashFunction(pointer.getKey())+1;
+            if(pointer.hasNext() == false && tempHash >= map.length)
+                return false;
+            return true;
         }
 
         protected Map.Entry<K,V> nextEntry() {
-            try{
-                return map[index++];
+            if(pointer.hasNext()){
+                if(prevPoint == null){
+                    K tempKey = pointer.getKey();
+                    prevPoint = map[hashFunction(tempKey)];
+                    pointer = pointer.getNext();
+                    return pointer;  
+                }
+                else{
+                    pointer = pointer.getNext();
+                    prevPoint = prevPoint.getNext();
+                    return pointer;
+                }
             }
-            catch(ArrayIndexOutOfBoundsException e){
-               return map[0]; 
+            else{
+                if(index+1 == map.length)
+                    index = 0;
+                else
+                    index ++;
+                prevPoint = prevPoint.getNext();
+                while(true){
+                    pointer = map[index];
+                    if(pointer == null)
+                        index++;
+                    else{
+                        prevPoint.setNextTuple(pointer);
+                        return pointer;
+                    }    
+                }
+                
             }
         }
 
         @Override
         public void remove() {
-            map[--index] = new Tuple((K) ";",(V) "deleted tuple");
+            prevPoint.setNextTuple(pointer.getNext());
+            pointer = pointer.getNext();
         }
     }
  
