@@ -11,7 +11,7 @@ import java.util.Set;
 public class CustomHashMap<K,V> implements Map<K,V> {
     
     public Tuple<K,V>[] map;
-    int size = 23;
+    int size = 62503;
     int elements = 0;
     
     public int hashFunction(Object obj){
@@ -218,10 +218,12 @@ public class CustomHashMap<K,V> implements Map<K,V> {
                 oldVal = pointer.getValue();
                 if(prevPoint == null){
                     map[hash] = pointer.getNext();
+                    elements--;
                     break;
                 }
                 if(prevPoint != null){
                     prevPoint.setNextTuple(pointer.getNext());
+                    elements--;
                     break;
                 }
             }
@@ -230,17 +232,17 @@ public class CustomHashMap<K,V> implements Map<K,V> {
                 pointer = pointer.getNext();
             }
         }
-        elements--;
         return oldVal;
     }
 
     @Override
-    public void putAll(Map<? extends K, ? extends V> map) {
-        Map.Entry<? extends K, ? extends V>[] tempEntSet;
-        tempEntSet = (Map.Entry<? extends K, ? extends V>[]) map.entrySet().toArray();
-        for(int i=0; i<tempEntSet.length; i++){
-            K tempK = tempEntSet[i].getKey();
-            V tempV = tempEntSet[i].getValue();
+    public void putAll(Map<? extends K, ? extends V> map) {       
+        Object[] keys = map.keySet().toArray();
+        Object[] values = map.values().toArray();
+        
+        for(int i=0; i<keys.length; i++){
+            K tempK = (K) keys[i];
+            V tempV = (V) values[i];
             this.put(tempK, tempV);
         }
     }
@@ -405,7 +407,7 @@ public class CustomHashMap<K,V> implements Map<K,V> {
 
                 @Override
                 public int size() {
-                    return CustomHashMap.this.size();
+                    return CustomHashMap.this.elements;
                 }
 
                 @Override
@@ -469,7 +471,7 @@ public class CustomHashMap<K,V> implements Map<K,V> {
             return oldVal;
         }
         
-        public boolean equals(Tuple t){
+        public boolean equals(Map.Entry<K,V> t){
             if(t == null){
                 return this == null;
             }
@@ -478,7 +480,7 @@ public class CustomHashMap<K,V> implements Map<K,V> {
         
         @Override
         public String toString(){
-        	String str = "{"+ this.key + " -> " + this.value +"}";
+        	String str = this.key + "=" + this.value;
         	return str;
         }
     }
